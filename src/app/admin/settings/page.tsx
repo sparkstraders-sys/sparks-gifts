@@ -1,198 +1,38 @@
 "use client";
-
-import { useState, useEffect } from "react";
-import { Loader2, CheckCircle, Settings } from "lucide-react";
-import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
-
-interface SettingsMap {
-  storeName: string;
-  tagline: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
-  address: string;
-  facebook: string;
-  instagram: string;
-  twitter: string;
-  deliveryCharge: string;
-  wrappingCharge: string;
-  codAvailable: string;
-  checkoutEmailEnabled: string;
-  checkoutEmailRequired: string;
-  heroTitle: string;
-  heroSubtitle: string;
-}
-
-const defaults: SettingsMap = {
-  storeName: "Sparks Gifts",
-  tagline: "Premium Gifting, Delivered with Love",
-  email: "hello@sparksgifts.pk",
-  phone: "+92 300 0000000",
-  whatsapp: "+92 300 0000000",
-  address: "Pakistan",
-  facebook: "",
-  instagram: "",
-  twitter: "",
-  deliveryCharge: "200",
-  wrappingCharge: "150",
-  codAvailable: "true",
-  checkoutEmailEnabled: "true",
-  checkoutEmailRequired: "false",
-  heroTitle: "Gift Someone Special Today",
-  heroSubtitle: "Premium gifts, beautifully wrapped and delivered across Pakistan",
-};
-
-export default function AdminSettingsPage() {
-  const [settings, setSettings] = useState<SettingsMap>(defaults);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/admin/settings")
-      .then((r) => r.json())
-      .then((data) => {
-        setSettings({ ...defaults, ...data });
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  function set(key: keyof SettingsMap, value: string) {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    const res = await fetch("/api/admin/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
-    if (res.ok) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    }
-    setSaving(false);
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 text-gold-400 animate-spin" />
-      </div>
-    );
-  }
-
-  return (
+import{useState,useEffect}from"react";import{Loader2,CheckCircle}from"lucide-react";
+const D={storeName:"Sparks Gifts",tagline:"Thoughtful Gifts, Delivered with Love.",email:"thesparkstraders@gmail.com",phone:"0300-143-2502",whatsapp:"923001432502",address:"Pakistan",facebook:"",instagram:"",twitter:"",deliveryCharge:"200",wrappingCharge:"150",heroTitle:"Send Love, Across Cities.",heroSubtitle:"Premium gifts, beautifully wrapped and delivered anywhere in Pakistan.",paymentAccountTitle:"",paymentJazzcash:"",paymentEasypaisa:"",paymentRaast:"",paymentBankDetails:""};
+export default function SettingsPage(){
+  const[s,setS]=useState(D);const[loading,setLoading]=useState(true);const[saving,setSaving]=useState(false);const[saved,setSaved]=useState(false);
+  useEffect(()=>{fetch("/api/admin/settings").then(r=>r.json()).then(d=>{setS({...D,...d});setLoading(false);}).catch(()=>setLoading(false));},[]);
+  function set(k:string,v:string){setS(p=>({...p,[k]:v}));}
+  async function save(e:React.FormEvent){e.preventDefault();setSaving(true);const r=await fetch("/api/admin/settings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(s)});if(r.ok){setSaved(true);setTimeout(()=>setSaved(false),2500);}setSaving(false);}
+  if(loading)return<div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 text-gold-400 animate-spin"/></div>;
+  const F=({label,k,type="text",hint}:{label:string;k:keyof typeof s;type?:string;hint?:string})=>(
+    <div><label className="block text-[10px] font-bold tracking-wider uppercase text-dark-500 mb-1.5">{label}</label><input type={type} value={s[k]} onChange={e=>set(k,e.target.value)} className="w-full px-4 py-3 border border-dark-200 text-sm focus:outline-none focus:border-gold-500"/>{hint&&<p className="text-xs text-dark-400 mt-1">{hint}</p>}</div>
+  );
+  return(
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-900">Store Settings</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Manage your store configuration</p>
-      </div>
-
-      <form onSubmit={handleSave} className="space-y-5">
-        {/* Store Info */}
-        <div className="bg-white border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Settings className="w-4 h-4 text-gold-500" />
-            <h2 className="text-xs font-medium tracking-widest uppercase text-gray-500">Store Information</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input label="Store Name" value={settings.storeName} onChange={(e) => set("storeName", e.target.value)} />
-            <Input label="Tagline" value={settings.tagline} onChange={(e) => set("tagline", e.target.value)} />
-            <Input label="Email" type="email" value={settings.email} onChange={(e) => set("email", e.target.value)} />
-            <Input label="Phone" value={settings.phone} onChange={(e) => set("phone", e.target.value)} />
-            <Input label="WhatsApp Number" value={settings.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} hint="Include country code e.g. +92300..." />
-            <div className="sm:col-span-2">
-              <Input label="Address" value={settings.address} onChange={(e) => set("address", e.target.value)} />
-            </div>
-          </div>
+      <div><h1 className="text-xl font-bold text-dark-900">Store Settings</h1><p className="text-sm text-dark-400 mt-0.5">Manage your store configuration</p></div>
+      <form onSubmit={save} className="space-y-5">
+        <div className="bg-white border border-dark-100 p-5"><div className="text-[10px] font-bold tracking-widest uppercase text-dark-400 mb-4">Store Information</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><F label="Store Name" k="storeName"/><F label="Tagline" k="tagline"/><F label="Email" k="email" type="email"/><F label="Phone" k="phone"/><F label="WhatsApp Number" k="whatsapp" hint="Include country code e.g. 923001432502"/><F label="Address" k="address"/></div>
         </div>
-
-        {/* Social links */}
-        <div className="bg-white border border-gray-100 p-5">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-gray-500 mb-4">Social Media</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Input label="Facebook URL" value={settings.facebook} onChange={(e) => set("facebook", e.target.value)} placeholder="https://facebook.com/..." />
-            <Input label="Instagram URL" value={settings.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="https://instagram.com/..." />
-            <Input label="Twitter/X URL" value={settings.twitter} onChange={(e) => set("twitter", e.target.value)} placeholder="https://twitter.com/..." />
-          </div>
+        <div className="bg-white border border-dark-100 p-5"><div className="text-[10px] font-bold tracking-widest uppercase text-dark-400 mb-4">Social Media</div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4"><F label="Facebook URL" k="facebook"/><F label="Instagram URL" k="instagram"/><F label="Twitter/X URL" k="twitter"/></div>
         </div>
-
-        {/* Delivery & Charges */}
-        <div className="bg-white border border-gray-100 p-5">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-gray-500 mb-4">Charges</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input label="Delivery Charge (Rs.)" type="number" value={settings.deliveryCharge} onChange={(e) => set("deliveryCharge", e.target.value)} hint="Set to 0 for free delivery" />
-            <Input label="Gift Wrapping Charge (Rs.)" type="number" value={settings.wrappingCharge} onChange={(e) => set("wrappingCharge", e.target.value)} />
-          </div>
+        <div className="bg-white border border-dark-100 p-5"><div className="text-[10px] font-bold tracking-widest uppercase text-dark-400 mb-4">Charges</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><F label="Delivery Charge (Rs.)" k="deliveryCharge" type="number" hint="Set 0 for free delivery"/><F label="Gift Wrapping Charge (Rs.)" k="wrappingCharge" type="number"/></div>
         </div>
-
-        {/* Checkout configuration */}
-        <div className="bg-white border border-gray-100 p-5">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-gray-500 mb-4">Checkout Configuration</h2>
-          <div className="space-y-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.codAvailable === "true"}
-                onChange={(e) => set("codAvailable", e.target.checked ? "true" : "false")}
-                className="w-4 h-4 accent-gold-500"
-              />
-              <div>
-                <div className="text-sm font-medium text-gray-700">Cash on Delivery Available</div>
-                <div className="text-xs text-gray-400">Allow COD as payment method</div>
-              </div>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.checkoutEmailEnabled === "true"}
-                onChange={(e) => set("checkoutEmailEnabled", e.target.checked ? "true" : "false")}
-                className="w-4 h-4 accent-gold-500"
-              />
-              <div>
-                <div className="text-sm font-medium text-gray-700">Show Email Field at Checkout</div>
-                <div className="text-xs text-gray-400">Customer can optionally provide email</div>
-              </div>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.checkoutEmailRequired === "true"}
-                onChange={(e) => set("checkoutEmailRequired", e.target.checked ? "true" : "false")}
-                className="w-4 h-4 accent-gold-500"
-              />
-              <div>
-                <div className="text-sm font-medium text-gray-700">Make Email Required</div>
-                <div className="text-xs text-gray-400">Only applies if email field is enabled</div>
-              </div>
-            </label>
-          </div>
+        <div className="bg-white border border-dark-100 p-5"><div className="text-[10px] font-bold tracking-widest uppercase text-dark-400 mb-1">Online payment accounts</div><p className="text-xs text-dark-400 mb-4">Shown to customers who send a custom gift to someone else (online payment only).</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><F label="Account title" k="paymentAccountTitle"/><F label="JazzCash number" k="paymentJazzcash"/><F label="EasyPaisa number" k="paymentEasypaisa"/><F label="Raast ID" k="paymentRaast"/></div>
+          <div className="mt-4"><label className="block text-[10px] font-bold tracking-wider uppercase text-dark-500 mb-1.5">Bank transfer details</label><textarea value={s.paymentBankDetails} onChange={e=>set("paymentBankDetails",e.target.value)} rows={3} placeholder="Bank name, account number, IBAN" className="w-full px-4 py-3 border border-dark-200 text-sm resize-none focus:outline-none focus:border-gold-500"/></div>
         </div>
-
-        {/* Homepage content */}
-        <div className="bg-white border border-gray-100 p-5">
-          <h2 className="text-xs font-medium tracking-widest uppercase text-gray-500 mb-4">Homepage Content</h2>
-          <div className="space-y-4">
-            <Input label="Hero Title" value={settings.heroTitle} onChange={(e) => set("heroTitle", e.target.value)} />
-            <Textarea label="Hero Subtitle" value={settings.heroSubtitle} onChange={(e) => set("heroSubtitle", e.target.value)} rows={2} />
-          </div>
+        <div className="bg-white border border-dark-100 p-5"><div className="text-[10px] font-bold tracking-widest uppercase text-dark-400 mb-4">Homepage Content</div>
+          <div className="space-y-4"><F label="Hero Title" k="heroTitle"/><div><label className="block text-[10px] font-bold tracking-wider uppercase text-dark-500 mb-1.5">Hero Subtitle</label><textarea value={s.heroSubtitle} onChange={e=>set("heroSubtitle",e.target.value)} rows={2} className="w-full px-4 py-3 border border-dark-200 text-sm resize-none focus:outline-none focus:border-gold-500"/></div></div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-3 bg-gold-500 text-white text-xs font-medium tracking-widest uppercase hover:bg-gold-600 transition-colors disabled:opacity-60"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <CheckCircle className="w-4 h-4" /> : null}
-            {saved ? "Saved!" : "Save Settings"}
-          </button>
-        </div>
+        <button type="submit" disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-gold-500 text-white text-[11px] font-bold tracking-widest uppercase hover:bg-gold-400 transition-colors disabled:opacity-60">
+          {saving?<Loader2 className="w-4 h-4 animate-spin"/>:saved?<><CheckCircle className="w-4 h-4"/>Saved!</>:"Save Settings"}
+        </button>
       </form>
     </div>
   );

@@ -1,12 +1,16 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { getCms, getSite } from "@/lib/content";
 
-export default function StoreLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = "force-dynamic";
+
+export default async function StoreLayout({ children }: { children: React.ReactNode }) {
+  const [cms, site] = await Promise.all([getCms(), getSite()]);
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <Header announcement={cms.announcement} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer cms={cms} site={site} />
     </div>
   );
 }

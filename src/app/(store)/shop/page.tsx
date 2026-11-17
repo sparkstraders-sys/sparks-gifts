@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Gift, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { getProductsWithImages, getActiveCategories } from "@/db/queries";
 import AddToCartButton from "@/components/shop/AddToCartButton";
 
@@ -12,65 +12,93 @@ interface Props { searchParams: Promise<{ category?: string; sort?: string; min?
 export default async function ShopPage({ searchParams }: Props) {
   const params = await searchParams;
   const [prods, cats] = await Promise.all([
-    getProductsWithImages({ isActive: true, categorySlug: params.category, sortBy: params.sort, minPrice: params.min ? parseFloat(params.min) : undefined, maxPrice: params.max ? parseFloat(params.max) : undefined, search: params.q }).catch(() => []),
+    getProductsWithImages({ isActive: true, categorySlug: params.category, sortBy: params.sort, minPrice: params.min ? +params.min : undefined, maxPrice: params.max ? +params.max : undefined, search: params.q }).catch(() => []),
     getActiveCategories().catch(() => []),
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex items-center gap-2 text-xs text-gray-400 mb-8">
-        <Link href="/" className="hover:text-gold-600">Home</Link><span>/</span><span className="text-gray-700">Shop</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="flex items-center gap-2 text-xs text-dark-400 mb-6">
+        <Link href="/" className="hover:text-gold-500">Home</Link><span>/</span><span className="text-dark-700">Shop</span>
       </div>
       <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="lg:w-56 flex-shrink-0">
+        {/* Sidebar */}
+        <aside className="lg:w-52 flex-shrink-0">
           <div className="sticky top-24">
-            <div className="flex items-center gap-2 mb-5"><SlidersHorizontal className="w-4 h-4 text-gold-500" /><h2 className="text-xs font-medium tracking-widest uppercase text-gray-700">Filters</h2></div>
-            <div className="mb-6">
-              <h3 className="text-[10px] font-medium tracking-widest uppercase text-gray-400 mb-3">Category</h3>
-              <ul className="space-y-1">
-                <li><Link href="/shop" className={`block px-2 py-1.5 text-sm transition-colors ${!params.category ? "text-gold-600 font-medium" : "text-gray-600 hover:text-gold-600"}`}>All Gifts</Link></li>
-                {cats.map((cat) => (
-                  <li key={cat.id}><Link href={`/shop?category=${cat.slug}`} className={`block px-2 py-1.5 text-sm transition-colors ${params.category === cat.slug ? "text-gold-600 font-medium" : "text-gray-600 hover:text-gold-600"}`}>{cat.name}</Link></li>
-                ))}
-              </ul>
+            <div className="flex items-center gap-2 mb-5">
+              <SlidersHorizontal className="w-4 h-4 text-gold-500" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-dark-500">Filters</span>
             </div>
-          </div>
-        </aside>
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
-            <p className="text-sm text-gray-500"><span className="font-semibold text-navy-800">{prods.length}</span> gifts found</p>
-            <div className="flex items-center gap-2">
-              {[["newest","Newest"],["price-asc","Price ↑"],["price-desc","Price ↓"]].map(([v,l]) => (
-                <Link key={v} href={`/shop?${params.category ? `category=${params.category}&` : ""}sort=${v}`} className={`px-3 py-1.5 text-xs font-medium tracking-wider transition-colors ${(params.sort ?? "newest") === v ? "bg-gold-500 text-white" : "border border-gray-200 text-gray-600 hover:border-gold-400"}`}>{l}</Link>
+            <div className="mb-6">
+              <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-dark-400 mb-3">Category</div>
+              <Link href="/shop" className={`block px-2 py-2 text-sm transition-colors ${!params.category ? "text-gold-500 font-semibold" : "text-dark-500 hover:text-gold-500"}`}>All Gifts</Link>
+              {cats.map(c => (
+                <Link key={c.id} href={`/shop?category=${c.slug}`} className={`block px-2 py-2 text-sm transition-colors ${params.category === c.slug ? "text-gold-500 font-semibold" : "text-dark-500 hover:text-gold-500"}`}>{c.name}</Link>
+              ))}
+            </div>
+            <div className="mb-6">
+              <div className="text-[9px] font-bold tracking-[0.2em] uppercase text-dark-400 mb-3">Price Range</div>
+              {[["Under Rs. 1,000","","1000"],["Rs. 1,000–2,500","1000","2500"],["Rs. 2,500–5,000","2500","5000"],["Rs. 5,000–10,000","5000","10000"],["Over Rs. 10,000","10000",""]].map(([l,mn,mx]) => (
+                <Link key={l} href={`/shop?${params.category?`category=${params.category}&`:""}${mn?`min=${mn}&`:""}${mx?`max=${mx}`:""}`}
+                  className="block px-2 py-2 text-sm text-dark-500 hover:text-gold-500 transition-colors">{l}</Link>
               ))}
             </div>
           </div>
+        </aside>
+
+        {/* Products */}
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-dark-100">
+            <p className="text-sm text-dark-400">
+              <span className="font-bold text-dark-900">{prods.length}</span> gifts found{params.q ? ` for "${params.q}"` : ""}
+            </p>
+            <div className="flex gap-1.5">
+              {[["newest","Newest"],["price-asc","Price ↑"],["price-desc","Price ↓"],["name-asc","A–Z"]].map(([v,l]) => (
+                <Link key={v} href={`/shop?${params.category?`category=${params.category}&`:""}sort=${v}`}
+                  className={`px-3 py-1.5 text-[10px] font-bold tracking-wider uppercase transition-colors ${(params.sort??'newest')===v?"bg-dark-900 text-white":"border border-dark-200 text-dark-500 hover:border-gold-400"}`}>
+                  {l}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {prods.length === 0 ? (
-            <div className="text-center py-20"><Gift className="w-12 h-12 text-gray-200 mx-auto mb-4" /><p className="text-gray-400">No gifts found</p><Link href="/shop" className="mt-3 inline-block text-gold-600 text-sm font-medium">Clear filters</Link></div>
+            <div className="text-center py-20">
+              <div className="text-5xl mb-4">🎁</div>
+              <p className="text-dark-400 mb-4">No gifts found</p>
+              <Link href="/shop" className="text-gold-500 font-semibold text-sm">Clear filters →</Link>
+            </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-              {prods.map((product) => {
-                const image = product.images[0];
-                const sp = parseFloat(String(product.sellPrice));
-                const disc = parseFloat(String(product.discount));
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {prods.map(p => {
+                const img = p.images[0];
+                const sp = parseFloat(String(p.sellPrice));
+                const disc = parseFloat(String(p.discount));
                 const fp = disc > 0 ? sp - (sp * disc) / 100 : sp;
                 return (
-                  <div key={product.id} className="group">
-                    <Link href={`/products/${product.slug}`}>
-                      <div className="relative aspect-square overflow-hidden bg-gray-50 mb-3">
-                        {image ? <Image src={image.url} alt={product.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center"><Gift className="w-10 h-10 text-gray-300" /></div>}
-                        {disc > 0 && <div className="absolute top-2 left-2 bg-gold-500 text-white text-[10px] font-bold px-2 py-0.5">-{disc}%</div>}
-                      </div>
-                      <div className="mb-2">
-                        {product.brand && <div className="text-[10px] tracking-widest text-gray-400 uppercase mb-0.5">{product.brand}</div>}
-                        <h3 className="text-sm font-medium text-navy-800 line-clamp-2 group-hover:text-gold-600 transition-colors">{product.name}</h3>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-sm font-semibold text-navy-900">Rs. {fp.toLocaleString("en-PK")}</span>
-                          {disc > 0 && <span className="text-xs text-gray-400 line-through">Rs. {sp.toLocaleString("en-PK")}</span>}
-                        </div>
+                  <div key={p.id} className="group bg-white border border-dark-100 card-3d overflow-hidden">
+                    <Link href={`/products/${p.slug}`}>
+                      <div className="relative aspect-square bg-dark-50 overflow-hidden">
+                        {img ? <Image src={img.url} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>}
+                        {disc > 0 && <div className="absolute top-2 left-2 bg-gold-500 text-white text-[10px] font-bold px-2 py-0.5">{disc}% OFF</div>}
                       </div>
                     </Link>
-                    <AddToCartButton product={{ id: product.id, name: product.name, slug: product.slug, brand: product.brand, sellPrice: sp, discount: disc, stock: product.stock, imageUrl: image?.url }} />
+                    <div className="p-3">
+                      {p.brand && <div className="text-[10px] text-dark-400 tracking-widest uppercase mb-0.5">{p.brand}</div>}
+                      <Link href={`/products/${p.slug}`}>
+                        <h3 className="text-sm font-semibold text-dark-800 line-clamp-2 mb-1.5 group-hover:text-gold-500 transition-colors">{p.name}</h3>
+                      </Link>
+                      <div className="flex items-center gap-0.5 mb-2">
+                        {"★★★★★".split("").map((s,i) => <span key={i} className="text-gold-400 text-[10px]">{s}</span>)}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-bold text-dark-900">Rs. {fp.toLocaleString("en-PK")}</div>
+                          {disc > 0 && <div className="text-xs text-dark-300 line-through">Rs. {sp.toLocaleString("en-PK")}</div>}
+                        </div>
+                        <AddToCartButton product={{ id: p.id, name: p.name, slug: p.slug, brand: p.brand, sellPrice: sp, discount: disc, stock: p.stock, imageUrl: img?.url }} compact />
+                      </div>
+                    </div>
                   </div>
                 );
               })}

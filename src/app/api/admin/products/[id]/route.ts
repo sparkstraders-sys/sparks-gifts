@@ -4,50 +4,19 @@ import { products, productImages } from "@/db/schema";
 import { requireAdmin } from "@/lib/adminAuth";
 import { slugify } from "@/lib/utils";
 import { eq, and, ne } from "drizzle-orm";
-
-interface Props { params: Promise<{ id: string }> }
-
-export async function GET(_: NextRequest, { params }: Props) {
+interface P { params: Promise<{ id: string }> }
+export async function PUT(req: NextRequest, { params }: P) {
   const { error } = await requireAdmin(); if (error) return error;
-  const { id } = await params;
-  const [p] = await db.select().from(products).where(eq(products.id, id));
-  if (!p) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const imgs = await db.select().from(productImages).where(eq(productImages.productId, id));
-  return NextResponse.json({ ...p, images: imgs });
+  const { id } = await params; const b = await req.json();
+  const [ex] = await db.select().from(products).where(eq(products.id, id));
+  if (!ex) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  let slug = ex.slug;
+  if (b.name && b.name !== ex.name) { slug = slugify(b.name); if ((await db.select().from(products).where(and(eq(products.slug, slug), ne(products.id, id)))).length) slug = `${slug}-${Date.now()}`; }
+  if (b.images !== undefined) { await db.delete(productImages).where(eq(productImages.productId, id)); if (b.images.length) await db.insert(productImages).values(b.images.map((i:{url:string;sortOrder:number}) => ({ productId: id, url: i.url, sortOrder: i.sortOrder }))); }
+  const [u] = await db.update(products).set({ name: b.name??ex.name, slug, brand: b.brand||null, description: b.description||null, sku: b.sku||null, costPrice: String(b.costPrice??ex.costPrice), sellPrice: String(b.sellPrice??ex.sellPrice), discount: String(b.discount??ex.discount), stock: b.stock??ex.stock, categoryId: b.categoryId??ex.categoryId, isActive: b.isActive??ex.isActive, isFeatured: b.isFeatured??ex.isFeatured, updatedAt: new Date() }).where(eq(products.id, id)).returning();
+  return NextResponse.json(u);
 }
-
-export async function PUT(request: NextRequest, { params }: Props) {
-  const { error } = await requireAdmin(); if (error) return error;
-  const { id } = await params;
-  try {
-    const body = await request.json();
-    const [existing] = await db.select().from(products).where(eq(products.id, id));
-    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    let slug = existing.slug;
-    if (body.name && body.name !== existing.name) {
-      slug = slugify(body.name);
-      const conflict = await db.select().from(products).where(and(eq(products.slug, slug), ne(products.id, id)));
-      if (conflict.length) slug = `${slug}-${Date.now()}`;
-    }
-    if (body.images) {
-      await db.delete(productImages).where(eq(productImages.productId, id));
-      if (body.images.length) {
-        await db.insert(productImages).values(body.images.map((img: { url: string; altText?: string; sortOrder: number }) => ({ productId: id, url: img.url, altText: img.altText ?? null, sortOrder: img.sortOrder })));
-      }
-    }
-    const [updated] = await db.update(products).set({
-      name: body.name ?? existing.name, slug, brand: body.brand || null,
-      description: body.description || null, sku: body.sku || null,
-      costPrice: String(body.costPrice ?? existing.costPrice), sellPrice: String(body.sellPrice ?? existing.sellPrice),
-      discount: String(body.discount ?? existing.discount), stock: body.stock ?? existing.stock,
-      categoryId: body.categoryId ?? existing.categoryId, isActive: body.isActive ?? existing.isActive,
-      updatedAt: new Date(),
-    }).where(eq(products.id, id)).returning();
-    return NextResponse.json(updated);
-  } catch (e) { console.error(e); return NextResponse.json({ error: "Failed to update" }, { status: 500 }); }
-}
-
-export async function DELETE(_: NextRequest, { params }: Props) {
+export async function DELETE(_: NextRequest, { params }: P) {
   const { error } = await requireAdmin(); if (error) return error;
   const { id } = await params;
   await db.delete(products).where(eq(products.id, id));
