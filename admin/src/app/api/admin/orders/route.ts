@@ -1,0 +1,2 @@
+import{NextRequest,NextResponse}from"next/server";import{getAdminOrders}from"@/db/queries";import{requireAdmin}from"@/lib/adminAuth";
+export async function GET(req:NextRequest){const{error}=await requireAdmin();if(error)return error;const sp=new URL(req.url).searchParams;const page=parseInt(sp.get("page")??"1");const result=await getAdminOrders({status:sp.get("status")??undefined,limit:20,offset:(page-1)*20});return NextResponse.json({...result,page,pages:Math.ceil(result.total/20)});}
